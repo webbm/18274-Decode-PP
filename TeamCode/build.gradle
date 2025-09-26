@@ -14,6 +14,7 @@
 // Include common definitions from above.
 apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
     namespace = 'org.firstinspires.ftc.teamcode'
@@ -21,8 +22,15 @@ android {
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
+
+    // Ensure Kotlin compiles to Java 8 bytecode to match existing settings
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 dependencies {
     implementation project(':FtcRobotController')
+    // Kotlin standard library
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.20'
 }
