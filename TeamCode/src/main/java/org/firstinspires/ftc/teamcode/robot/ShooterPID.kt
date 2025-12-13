@@ -63,7 +63,7 @@ class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
                 (kI * leftIntegral) +
                 (kD * leftDerivative) +
                 (kF * targetTicksPerSecond)
-        val leftClipped = min(max(leftOutput, -1.0), 1.0)
+        val leftClipped = min(max(leftOutput, -.75), .75)
 
         // --- Right motor ---
         val rightVelocity = rightFlywheel.velocity
@@ -76,7 +76,7 @@ class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
                 (kI * rightIntegral) +
                 (kD * rightDerivative) +
                 (kF * targetTicksPerSecond)
-        val rightClipped = min(max(rightOutput, -1.0), 1.0)
+        val rightClipped = min(max(rightOutput, -.75), .75)
 
         // Apply power
         leftFlywheel.power = leftClipped

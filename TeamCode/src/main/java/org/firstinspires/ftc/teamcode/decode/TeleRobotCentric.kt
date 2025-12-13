@@ -1,36 +1,54 @@
 package org.firstinspires.ftc.teamcode.decode
 
+import android.R.attr.direction
 import com.arcrobotics.ftclib.drivebase.MecanumDrive
 import com.arcrobotics.ftclib.gamepad.GamepadEx
 import com.arcrobotics.ftclib.gamepad.TriggerReader
 import com.arcrobotics.ftclib.hardware.motors.Motor
+import com.arcrobotics.ftclib.hardware.motors.MotorEx
+import com.bylazar.telemetry.PanelsTelemetry
 import com.pedropathing.follower.Follower
 import com.pedropathing.geometry.Pose
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.CRServo
+import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.util.ElapsedTime
+import com.qualcomm.robotcore.util.Range
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import org.firstinspires.ftc.teamcode.robot.ShooterConfig
 import org.firstinspires.ftc.teamcode.robot.ShooterPID
 import org.firstinspires.ftc.teamcode.util.PS5Keys
-import kotlin.math.max
-import kotlin.math.min
+
 
 /**
  * Test OpMode for complex movements including Travel Position
  */
-@TeleOp(name = "Decode Robot Centric")
+@TeleOp(name = "Decode TeleOp")
 class TeleRobotCentric : LinearOpMode() {
 
-//    private lateinit var follower: Follower
+    enum class ShootingPosition(val min: Double, val middle: Double, val max: Double) {
+        CLOSE(1900.0, 2200.0, 2800.0),
+        FAR(2200.0, 2800.0, 3100.0);
+
+        fun toggle(): ShootingPosition {
+            return when (this) {
+                CLOSE -> FAR
+                FAR -> CLOSE
+            }
+        }
+    }
+
+    var shootingPosition = ShootingPosition.FAR
+
+    private lateinit var follower: Follower
 //    val startPose: Pose = Pose(6.5, 111.0, 0.0)
 
     lateinit var ffl: CRServo
     lateinit var ffr: CRServo
+    lateinit var intake: DcMotorEx
 
-    lateinit var follower: Follower
 
     val config = ShooterConfig
 
@@ -45,10 +63,7 @@ class TeleRobotCentric : LinearOpMode() {
         val timer: ElapsedTime = ElapsedTime()
 
         follower = Constants.createFollower(hardwareMap)
-        follower.setStartingPose(Pose())
         follower.update()
-
-        val driveSpeedMultiplier = 1.0
 
         // Initialize gamepad
         val driverGamepad = GamepadEx(gamepad1)
@@ -59,32 +74,21 @@ class TeleRobotCentric : LinearOpMode() {
         // Initialize drive motors
 
         ffl = hardwareMap.get(CRServo::class.java, "feed_left").apply {
-            direction = DcMotorSimple.Direction.FORWARD
+            direction = DcMotorSimple.Direction.REVERSE
         }
 
         ffr = hardwareMap.get(CRServo::class.java, "feed_right").apply {
+            direction = DcMotorSimple.Direction.FORWARD
+        }
+
+        intake = hardwareMap.get(DcMotorEx::class.java, "intake").apply {
             direction = DcMotorSimple.Direction.REVERSE
         }
 
         shooter = ShooterPID(config.kP, config.kI, config.kD, config.kF)
         shooter.init(hardwareMap)
 
-        val frontLeft = Motor(hardwareMap, "left_front", Motor.GoBILDA.RPM_1150).apply {
-            setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE)
-        }
-        val frontRight = Motor(hardwareMap, "right_front", Motor.GoBILDA.RPM_1150).apply {
-            setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE)
-        }
-        val backLeft = Motor(hardwareMap, "left_back", Motor.GoBILDA.RPM_1150).apply {
-            setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE)
-        }
-        val backRight = Motor(hardwareMap, "right_back", Motor.GoBILDA.RPM_1150).apply {
-            setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE)
-        }
-        val driveTrain = MecanumDrive(frontLeft, frontRight, backLeft, backRight)
-
-        var manualOverride = false
-        var resetEncoders = false
+        follower.setStartingPose(Pose())
 
         telemetry.addData("Status", "Initialized")
         telemetry.addData("Controls", "Y button: Travel Position")
@@ -92,14 +96,60 @@ class TeleRobotCentric : LinearOpMode() {
 
         waitForStart()
 
-//        follower.startTeleopDrive(true)
+        var shooterSpeed = 2000.0
 
-        var shooterSpeed = 2750.0
+        follower.startTeleopDrive(true)
+        var reverseOn = false
 
         while (opModeIsActive()) {
-            shooter.update()
+
             follower.update()
 
+            shooter.update()
+
+            val driveSpeedMultiplier = -1.0
+
+
+            follower.setTeleOpDrive(
+                driverGamepad.leftY,
+                -driverGamepad.leftX,
+                -driverGamepad.rightX,
+                true // Robot Centric
+            )
+            follower.update()
+
+            if (driverGamepad.wasJustPressed(PS5Keys.Button.LEFT_BUMPER.xboxButton) && !reverseOn) {
+                follower.setTeleOpDrive(
+                    gamepad1.left_stick_y.toDouble(),
+                    -gamepad1.left_stick_x.toDouble(),
+                    gamepad1.right_stick_x.toDouble(),
+                    true // Robot Centric
+                )
+                follower.update()
+                reverseOn = true
+            }else if (driverGamepad.wasJustPressed(PS5Keys.Button.LEFT_BUMPER.xboxButton) && reverseOn){
+                follower.setTeleOpDrive(
+                    -gamepad1.left_stick_y.toDouble(),
+                    gamepad1.left_stick_x.toDouble(),
+                    gamepad1.right_stick_x.toDouble(),
+                    true // Robot Centric
+                )
+                follower.update()
+                reverseOn = false
+            }
+
+            if (manipulatorGamepad.getTrigger(PS5Keys.Trigger.RIGHT_TRIGGER.xboxTrigger) >= 0.15){
+               intake.power = 1.0
+            }else if (manipulatorGamepad.getTrigger(PS5Keys.Trigger.LEFT_TRIGGER.xboxTrigger) >= 0.15){
+                intake.power = -1.0
+            }else {
+                intake.power = 0.0
+            }
+//            follower.update()
+//
+//            if (driverGamepad.wasJustPressed(PS5Keys.Button.LEFT_BUMPER.xboxButton)) {
+//                follower.pose = Pose()
+//            }
 
             // Read gamepad inputs
             driverGamepad.readButtons()
@@ -109,54 +159,52 @@ class TeleRobotCentric : LinearOpMode() {
 
             shooter.update()
 
+            if (manipulatorGamepad.wasJustPressed(PS5Keys.Button.CROSS.xboxButton)) {
+                shootingPosition = shootingPosition.toggle()
+                shooterSpeed = shootingPosition.middle
+            }
+            if (manipulatorGamepad.wasJustPressed(PS5Keys.Button.TRIANGLE.xboxButton)) {
+                shooter.setTargetRpm(-2500.0)
+            }
+
             if (manipulatorGamepad.wasJustPressed(PS5Keys.Button.DPAD_UP.xboxButton)){
-                shooterSpeed = min(3000.0, shooterSpeed + 250.0)
+                shooterSpeed = Range.clip(shooterSpeed + 100.0, shootingPosition.min, shootingPosition.max)
                 shooter.setTargetRpm(shooterSpeed)
                 shooter.update()
             }else if (manipulatorGamepad.wasJustPressed(PS5Keys.Button.DPAD_DOWN.xboxButton)) {
-                shooterSpeed = max(1000.0, shooterSpeed - 250.0)
+                shooterSpeed = Range.clip(shooterSpeed - 100.0, shootingPosition.min, shootingPosition.max)
                 shooter.setTargetRpm(shooterSpeed)
                 shooter.update()
             }else if (manipulatorGamepad.wasJustPressed(PS5Keys.Button.DPAD_LEFT.xboxButton)) {
                 shooter.setTargetRpm(0.0)
+            }else if (manipulatorGamepad.wasJustPressed(PS5Keys.Button.DPAD_RIGHT.xboxButton)) {
+                shooter.setTargetRpm(shooterSpeed)
             }
             shooter.update()
             if (manipulatorGamepad.isDown((PS5Keys.Button.RIGHT_BUMPER.xboxButton))){
-                ffl.power = 0.8
-                ffr.power = 0.8
+                ffl.power = .4
+                ffr.power = .4
             }else if (manipulatorGamepad.isDown((PS5Keys.Button.LEFT_BUMPER.xboxButton))) {
-                ffl.power = -0.5
-                ffr.power = -0.5
+                ffl.power = -0.6
+                ffr.power = -0.6
             }else {
                 ffl.power = 0.0
                 ffr.power = 0.0
             }
 
-
-//            driveTrain.driveRobotCentric(
-//                -driverGamepad.leftX * driveSpeedMultiplier,
-//                driverGamepad.leftY * driveSpeedMultiplier,
-//                -driverGamepad.rightX * driveSpeedMultiplier,
-//            )
-//
-
-            follower.setTeleOpDrive(
-                gamepad1.left_stick_y.toDouble(),
-                -gamepad1.left_stick_x.toDouble(),
-                -gamepad1.right_stick_x.toDouble(),
-                true
-            )
-            follower.update()
-
             shooter.update()
+            follower.update()
 
             // Display telemetry
             telemetry.addData("Status", "Running")
-            telemetry.addData("Motor Speed RPM:", shooter.flywheel())
+            telemetry.addData("Shooter speed", shooterSpeed)
+            telemetry.addData("Shooting Position", shootingPosition)
 //            telemetry.addData("X", follower.pose.x)
 //            telemetry.addData("Y", follower.pose.y)
 //            telemetry.addData("Heading in Degrees", Math.toDegrees(follower.pose.heading))
             telemetry.update()
+
+            idle()
 
         }
     }

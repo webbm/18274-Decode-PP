@@ -36,7 +36,7 @@ import kotlin.math.max
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
-@Autonomous(name = "Tinker Auto", group = "")
+@Autonomous(name = "Tinker Auto")
 //@Disabled
 class TinkerFestAuto : LinearOpMode() {
     /* Declare OpMode members. */
@@ -47,6 +47,8 @@ class TinkerFestAuto : LinearOpMode() {
 
     lateinit var ffl: CRServo
     lateinit var ffr: CRServo
+
+    lateinit var intake: DcMotorEx
 
     val config = ShooterConfig
 
@@ -102,6 +104,10 @@ class TinkerFestAuto : LinearOpMode() {
             direction = DcMotorSimple.Direction.REVERSE
         }
 
+        intake = hardwareMap.get(DcMotorEx::class.java, "intake").apply {
+            direction = DcMotorSimple.Direction.REVERSE
+        }
+
         val logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP
         val usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
         val orientationOnRobot = RevHubOrientationOnRobot(logoDirection, usbDirection)
@@ -113,8 +119,6 @@ class TinkerFestAuto : LinearOpMode() {
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
 
         val FORWARD_SPEED = 0.6
-        val TURN_SPEED = 0.5
-        val HEADING_THRESHOLD = .5
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData("Status", "Ready to run") //
@@ -122,90 +126,36 @@ class TinkerFestAuto : LinearOpMode() {
 
         // Wait for the game to start (driver presses START)
         waitForStart()
+        runtime.reset()
 
-        imu.resetYaw()
+        while (true) {
+            shooter.setTargetRpm(2400.0)
+            shooter.update()
 
-        fun moveRobot(drive: Double, turn: Double) {
-            driveSpeed = drive // save this value as a class member so it can be used by telemetry.
-            turnSpeed = turn // save this value as a class member so it can be used by telemetry.
-
-            leftSpeed = drive - turn
-            rightSpeed = drive + turn
-
-            // Scale speeds down if either one exceeds +/- 1.0;
-            val max = max(abs(leftSpeed), abs(rightSpeed))
-            if (max > 1.0) {
-                leftSpeed /= max
-                rightSpeed /= max
+            if (runtime.milliseconds() > 4) {
+                // wait for the shooter to spin up
+                ffr.power = -.75
+                ffl.power = -.75
             }
 
-            leftDrive.setPower(leftSpeed)
-            rightDrive.setPower(rightSpeed)
-        }
-
-        fun getSteeringCorrection(desiredHeading: Double, proportionalGain: Double): Double {
-            targetHeading = desiredHeading // Save for telemetry
-
-            // Determine the heading current error
-            headingError = targetHeading - imu.robotYawPitchRollAngles.yaw
-
-            // Normalize the error to be within +/- 180 degrees
-            while (headingError > 180) headingError -= 360.0
-            while (headingError <= -180) headingError += 360.0
-
-            // Multiply the error by the gain to determine the required steering correction/  Limit the result to +/- 1.0
-            return Range.clip(headingError * proportionalGain, -1.0, 1.0)
-        }
-
-        fun turnToHeading(maxTurnSpeed: Double, heading: Double) {
-            // Run getSteeringCorrection() once to pre-calculate the current error
-
-            getSteeringCorrection(heading, P_DRIVE_GAIN)
-
-            // keep looping while we are still active, and not on heading.
-            while (opModeIsActive() && (abs(headingError) > HEADING_THRESHOLD)) {
-                // Determine required steering to keep on heading
-
-                turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN)
-
-                // Clip the speed to the maximum permitted value.
-                turnSpeed = Range.clip(turnSpeed, -maxTurnSpeed, maxTurnSpeed)
-
-                // Pivot in place by applying the turning correction
-                moveRobot(0.0, turnSpeed)
-
-                // Display drive status for the driver.
+            if (runtime.milliseconds() > 2) {
+                // wait for the shooter to spin up
+                intake.power = -.1
 
             }
 
-            // Stop all motion;
-            moveRobot(0.0, 0.0)
+            if (runtime.seconds() > 18) {
+                intake.power = 0.0
+                ffr.power = 0.0
+                ffl.power = 0.0
+                shooter.stop()
+                break
+            }
         }
 
-        val timer = ElapsedTime()
+        leftDrive.power = FORWARD_SPEED
+        rightDrive.power = FORWARD_SPEED
 
-        // Step through each leg of the path, ensuring that the OpMode has not been stopped along the way.
-        // Step 1:  Drive forward for 3 seconds
-
-        shooter.setTargetRpm(2250.0)
-        shooter.update()
-        if (timer.seconds() > 5){
-            shooter.update()
-            timer.reset()
-            shooter.update()
-            ffr.power = 0.8
-            ffl.power = 0.8
-            shooter.update()
-        }
-        if (timer.seconds() > 10.0){
-            shooter.stop()
-            ffr.power = 0.0
-            ffl.power = 0.0
-        }
-
-
-        leftDrive.setPower(FORWARD_SPEED)
-        rightDrive.setPower(FORWARD_SPEED)
         runtime.reset()
         while (opModeIsActive() && (runtime.seconds() < 1.0)) {
             telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds())
@@ -213,8 +163,8 @@ class TinkerFestAuto : LinearOpMode() {
         }
 
         // Step 4:  Stop
-        leftDrive.setPower(0.0)
-        rightDrive.setPower(0.0)
+        leftDrive.power = 0.0
+        rightDrive.power = 0.0
 
         telemetry.addData("Path", "Complete")
         telemetry.update()
