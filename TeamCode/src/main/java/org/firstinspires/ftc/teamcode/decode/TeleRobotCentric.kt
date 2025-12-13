@@ -114,11 +114,11 @@ class TeleRobotCentric : LinearOpMode() {
                 driverGamepad.leftY,
                 -driverGamepad.leftX,
                 -driverGamepad.rightX,
-                true // Robot Centric
+                false // Robot Centric
             )
             follower.update()
 
-            if (driverGamepad.wasJustPressed(PS5Keys.Button.LEFT_BUMPER.xboxButton) && !reverseOn) {
+           /* if (driverGamepad.wasJustPressed(PS5Keys.Button.LEFT_BUMPER.xboxButton) && !reverseOn) {
                 follower.setTeleOpDrive(
                     gamepad1.left_stick_y.toDouble(),
                     -gamepad1.left_stick_x.toDouble(),
@@ -136,7 +136,7 @@ class TeleRobotCentric : LinearOpMode() {
                 )
                 follower.update()
                 reverseOn = false
-            }
+            }*/
 
             if (manipulatorGamepad.getTrigger(PS5Keys.Trigger.RIGHT_TRIGGER.xboxTrigger) >= 0.15){
                intake.power = 1.0
@@ -145,11 +145,11 @@ class TeleRobotCentric : LinearOpMode() {
             }else {
                 intake.power = 0.0
             }
-//            follower.update()
-//
-//            if (driverGamepad.wasJustPressed(PS5Keys.Button.LEFT_BUMPER.xboxButton)) {
-//                follower.pose = Pose()
-//            }
+            follower.update()
+
+            if (driverGamepad.wasJustPressed(PS5Keys.Button.LEFT_BUMPER.xboxButton)) {
+                follower.pose = Pose()
+            }
 
             // Read gamepad inputs
             driverGamepad.readButtons()
@@ -182,8 +182,8 @@ class TeleRobotCentric : LinearOpMode() {
             }
             shooter.update()
             if (manipulatorGamepad.isDown((PS5Keys.Button.RIGHT_BUMPER.xboxButton))){
-                ffl.power = .4
-                ffr.power = .4
+                ffl.power = .7
+                ffr.power = .7
             }else if (manipulatorGamepad.isDown((PS5Keys.Button.LEFT_BUMPER.xboxButton))) {
                 ffl.power = -0.6
                 ffr.power = -0.6

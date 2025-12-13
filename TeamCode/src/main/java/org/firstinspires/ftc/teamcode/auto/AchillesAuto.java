@@ -11,10 +11,14 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.sun.tools.javac.comp.Todo;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-
-import java.util.function.ToDoubleBiFunction;
+import org.firstinspires.ftc.teamcode.robot.ShooterConfig;
+import org.firstinspires.ftc.teamcode.robot.ShooterPID;
+import org.firstinspires.ftc.teamcode.robot.ShooterConfig;
 
 @Autonomous(name = "Achilles Auto")
 @Configurable // Panels
@@ -27,6 +31,15 @@ public class AchillesAuto extends OpMode {
 
     private Timer pathTimer, actionTimer, opmodeTimer;
 
+    private DcMotorEx intake;
+
+    public ShooterConfig config;
+
+    public ShooterPID shooterPID;
+
+    private CRServo ffl;
+    private CRServo ffr;
+
     public static class Paths {
 
         public PathChain readAprilTag;
@@ -37,6 +50,7 @@ public class AchillesAuto extends OpMode {
         public PathChain scorePickup2;
         public PathChain grabPickup3;
         public PathChain scorePickup3;
+        public PathChain driveToGrab1;
         public PathChain park;
 
         //      Paths are in Here
@@ -49,6 +63,14 @@ public class AchillesAuto extends OpMode {
 //                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(80))
 //                    .build();
 
+            driveToGrab1 = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(48.000, 86.500), new Pose(30.000, 90.000))
+                    )
+                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                    .build();
+
             scorePosition = follower
                     .pathBuilder()
                     .addPath(
@@ -60,17 +82,17 @@ public class AchillesAuto extends OpMode {
             grabPickup1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(57.000, 103.000), new Pose(41.000, 84.000))
+                            new BezierLine(new Pose(57.000, 103.000), new Pose(48.000, 90.000))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(180))
+                    .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(0))
                     .build();
 
             scorePickup1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(41.000, 84.000), new Pose(58.000, 103.000))
+                            new BezierLine(new Pose(30.000, 86.500), new Pose(58.000, 103.000))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140))
+                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(140))
                     .build();
 
             grabPickup2 = follower
@@ -120,21 +142,21 @@ public class AchillesAuto extends OpMode {
         pathTimer.resetTimer();
     }
 
-    public void goToAprilTag() {
-        switch (pathState) {
-            case 0:
-                follower.followPath(paths.readAprilTag);
-                setPathState(1);
-                break;
-            case 1:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
-                    /* Set the state to a Case we won't use or define, so it just stops running an new paths */
-                    setPathState(-1);
-                }
-                break;
-        }
-    }
+//    public void goToAprilTag() {
+//        switch (pathState) {
+//            case 0:
+//                follower.followPath(paths.readAprilTag);
+//                setPathState(1);
+//                break;
+//            case 1:
+//                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+//                if(!follower.isBusy()) {
+//                    /* Set the state to a Case we won't use or define, so it just stops running an new paths */
+//                    setPathState(-1);
+//                }
+//                break;
+//        }
+//    }
 
     public void goToFirstScorePose() {
         switch (pathState) {
@@ -143,12 +165,54 @@ public class AchillesAuto extends OpMode {
                 setPathState(1);
                 break;
             case 1:
-                if(!follower.isBusy()) {
-                    follower.followPath(paths.grabPickup1, true);
-                    setPathState(2);
+                if (!follower.isBusy()){
+                   shooterPID.setTargetRpm(2200);
+                   actionTimer.resetTimer();
+                }
+                if (actionTimer.getElapsedTimeSeconds() > 1.5){
+                    ffl.setPower(7);
+                    ffr.setPower(7);
+                    actionTimer.resetTimer();
                 }
                 break;
             case 2:
+                if(!follower.isBusy() && actionTimer.getElapsedTimeSeconds() > 8) {
+                    shooterPID.setTargetRpm(0);
+                    follower.followPath(paths.grabPickup1, true);
+                    setPathState(3);
+                }
+                break;
+            case 3:
+                if (!follower.isBusy()) {
+                    intake.setPower(1.0);
+                    ffl.setPower(.2);
+                    ffr.setPower(.2);
+                    actionTimer.resetTimer();
+                    setPathState(4);
+                }
+                break;
+            case 4:
+                if (intake.getPower() > .9 && actionTimer.getElapsedTimeSeconds() > 2) {
+                    follower.followPath(paths.driveToGrab1, true);
+                    actionTimer.resetTimer();
+                    setPathState(5);
+                }
+                break;
+            case 5:
+                if (!follower.isBusy() && actionTimer.getElapsedTimeSeconds() > 2) {
+                    intake.setPower(0.0);
+                    ffl.setPower(0);
+                    ffr.setPower(0);
+                    follower.followPath(paths.scorePickup1, true);
+                    setPathState(6);
+                }
+                break;
+            case 6:
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.park, true);
+                    setPathState(7);
+                }
+            case 7:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
@@ -267,14 +331,30 @@ public class AchillesAuto extends OpMode {
     @Override
     public void init() {
         pathTimer = new Timer();
+
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
+
+        actionTimer = new Timer();
+        actionTimer.resetTimer();
+
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(57, 15, Math.toRadians(90)));
 
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+
         paths = new Paths(follower); // Build paths
+
+        shooterPID = new ShooterPID(config.kP, config.kI, config.kD, config.kF);
+        shooterPID.init(hardwareMap);
+
+        ffl = hardwareMap.get(CRServo.class, "feed_left");
+        ffr = hardwareMap.get(CRServo.class, "feed_right");
+
+        ffl.setDirection(DcMotorSimple.Direction.REVERSE);
 
         panelsTelemetry.debug("Status", "Initialized");
         panelsTelemetry.update(telemetry);
@@ -290,6 +370,7 @@ public class AchillesAuto extends OpMode {
         //to go and what order to do it in using if and else if statements
 
         // Log values to Panels and Driver Station
+        panelsTelemetry.debug("intake power", intake.getPower());
         panelsTelemetry.debug("Path State", pathState);
         panelsTelemetry.debug("X", follower.getPose().getX());
         panelsTelemetry.debug("Y", follower.getPose().getY());
