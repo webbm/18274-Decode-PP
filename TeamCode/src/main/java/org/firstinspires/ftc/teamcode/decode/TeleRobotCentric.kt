@@ -47,7 +47,8 @@ class TeleRobotCentric : LinearOpMode() {
 
     lateinit var ffl: CRServo
     lateinit var ffr: CRServo
-    lateinit var intake: DcMotorEx
+    lateinit var intakeRight: DcMotorEx
+    lateinit var intakeLeft: DcMotorEx
 
 
     val config = ShooterConfig
@@ -81,8 +82,11 @@ class TeleRobotCentric : LinearOpMode() {
             direction = DcMotorSimple.Direction.FORWARD
         }
 
-        intake = hardwareMap.get(DcMotorEx::class.java, "intake").apply {
+        intakeLeft = hardwareMap.get(DcMotorEx::class.java, "intake").apply {
             direction = DcMotorSimple.Direction.REVERSE
+        }
+        intakeRight = hardwareMap.get(DcMotorEx::class.java, "intake").apply {
+            direction = DcMotorSimple.Direction.FORWARD
         }
 
         shooter = ShooterPID(config.kP, config.kI, config.kD, config.kF)
@@ -139,11 +143,14 @@ class TeleRobotCentric : LinearOpMode() {
             }*/
 
             if (manipulatorGamepad.getTrigger(PS5Keys.Trigger.RIGHT_TRIGGER.xboxTrigger) >= 0.15){
-               intake.power = 1.0
+               intakeLeft.power = .75
+               intakeRight.power = .75
             }else if (manipulatorGamepad.getTrigger(PS5Keys.Trigger.LEFT_TRIGGER.xboxTrigger) >= 0.15){
-                intake.power = -1.0
+                intakeLeft.power = -.75
+                intakeRight.power = -.75
             }else {
-                intake.power = 0.0
+                intakeLeft.power = 0.0
+                intakeRight.power = 0.0
             }
             follower.update()
 
@@ -182,11 +189,11 @@ class TeleRobotCentric : LinearOpMode() {
             }
             shooter.update()
             if (manipulatorGamepad.isDown((PS5Keys.Button.RIGHT_BUMPER.xboxButton))){
-                ffl.power = .7
-                ffr.power = .7
+                ffl.power = .6
+                ffr.power = .6
             }else if (manipulatorGamepad.isDown((PS5Keys.Button.LEFT_BUMPER.xboxButton))) {
-                ffl.power = -0.6
-                ffr.power = -0.6
+                ffl.power = -0.5
+                ffr.power = -0.5
             }else {
                 ffl.power = 0.0
                 ffr.power = 0.0
