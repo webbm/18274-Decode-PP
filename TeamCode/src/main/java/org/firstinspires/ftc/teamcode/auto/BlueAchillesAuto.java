@@ -12,17 +12,15 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.robot.ShooterConfig;
 import org.firstinspires.ftc.teamcode.robot.ShooterPID;
-import org.firstinspires.ftc.teamcode.robot.ShooterConfig;
 
-@Autonomous(name = "Achilles Auto")
+@Autonomous(name = "Far Blue Auto", group = "Blue")
 @Configurable // Panels
-public class AchillesAuto extends OpMode {
+public class BlueAchillesAuto extends OpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
     public Follower follower; // Pedro Pathing follower instance
@@ -66,7 +64,7 @@ public class AchillesAuto extends OpMode {
             driveToGrab1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(48.000, 86.500), new Pose(30.000, 90.000))
+                            new BezierLine(new Pose(48.000, 86.500), new Pose(27.000, 90.000))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                     .build();
@@ -130,7 +128,7 @@ public class AchillesAuto extends OpMode {
             park = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(58.000, 103.000), new Pose(36.000, 10.000))
+                            new BezierLine(new Pose(58.000, 103.000), new Pose(60.000, 140.000))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(180))
                     .build();
@@ -166,57 +164,103 @@ public class AchillesAuto extends OpMode {
                 break;
             case 1:
                 if (!follower.isBusy()){
-                   shooterPID.setTargetRpm(2200);
+                   shooterPID.setTargetRpm(2300);
+                   shooterPID.update();
                    actionTimer.resetTimer();
-                }
-                if (actionTimer.getElapsedTimeSeconds() > 1.5){
-                    ffl.setPower(7);
-                    ffr.setPower(7);
-                    actionTimer.resetTimer();
+                   setPathState(2);
                 }
                 break;
             case 2:
-                if(!follower.isBusy() && actionTimer.getElapsedTimeSeconds() > 8) {
-                    shooterPID.setTargetRpm(0);
-                    follower.followPath(paths.grabPickup1, true);
+                shooterPID.update();
+                if (actionTimer.getElapsedTimeSeconds() > 0.75){
+                    ffl.setPower(1);
+                    ffr.setPower(1);
+                    intake.setPower(0.15);
+                    actionTimer.resetTimer();
                     setPathState(3);
                 }
                 break;
             case 3:
-                if (!follower.isBusy()) {
-                    intake.setPower(1.0);
-                    ffl.setPower(.2);
-                    ffr.setPower(.2);
-                    actionTimer.resetTimer();
+                shooterPID.update();
+                if(!follower.isBusy() && actionTimer.getElapsedTimeSeconds() > 7) {
+                    shooterPID.setTargetRpm(0);
+                    ffl.setPower(0);
+                    ffr.setPower(0);
+                    shooterPID.update();
+                    follower.followPath(paths.grabPickup1, true);
                     setPathState(4);
                 }
                 break;
             case 4:
-                if (intake.getPower() > .9 && actionTimer.getElapsedTimeSeconds() > 2) {
-                    follower.followPath(paths.driveToGrab1, true);
+                shooterPID.update();
+                if (!follower.isBusy()) {
+                    intake.setPower(1.0);
+                    ffl.setPower(.3);
+                    ffr.setPower(.3);
                     actionTimer.resetTimer();
                     setPathState(5);
                 }
                 break;
             case 5:
-                if (!follower.isBusy() && actionTimer.getElapsedTimeSeconds() > 2) {
-                    intake.setPower(0.0);
-                    ffl.setPower(0);
-                    ffr.setPower(0);
-                    follower.followPath(paths.scorePickup1, true);
+                if (intake.getPower() > .9 && actionTimer.getElapsedTimeSeconds() > 2) {
+                    follower.followPath(paths.driveToGrab1, true);
+                    actionTimer.resetTimer();
                     setPathState(6);
                 }
                 break;
             case 6:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.park, true);
+                if (!follower.isBusy() && actionTimer.getElapsedTimeSeconds() > 0.5) {
+                    intake.setPower(0.0);
+                    ffl.setPower(0);
+                    ffr.setPower(0);
+                    follower.followPath(paths.scorePickup1, true);
                     setPathState(7);
                 }
+                break;
             case 7:
+                shooterPID.update();
+                if (!follower.isBusy()){
+                    shooterPID.setTargetRpm(2200);
+                    shooterPID.update();
+                    actionTimer.resetTimer();
+                    setPathState(8);
+                }
+                break;
+            case 8:
+                shooterPID.update();
+                if (actionTimer.getElapsedTimeSeconds() > 1.5){
+                    shooterPID.update();
+                    intake.setPower(.15);
+                    ffl.setPower(1);
+                    ffr.setPower(1);
+                    actionTimer.resetTimer();
+                    shooterPID.update();
+                    setPathState(9);
+                }
+                break;
+            case 9:
+                shooterPID.update();
+                if (!follower.isBusy() && actionTimer.getElapsedTimeSeconds() > 7) {
+                    shooterPID.setTargetRpm(0);
+                    shooterPID.update();
+                    ffl.setPower(0);
+                    ffr.setPower(0);
+                    shooterPID.update();
+                    follower.followPath(paths.park, true);
+                    setPathState(10);
+                }
+                break;
+            case 10:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                shooterPID.update();
                 if(!follower.isBusy()) {
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
+                    shooterPID.setTargetRpm(0.0);
+                    shooterPID.update();
+                    actionTimer.resetTimer();
+                    if (actionTimer.getElapsedTimeSeconds() > 1.5) {
                     setPathState(-1);
+                    }
                 }
                 break;
         }

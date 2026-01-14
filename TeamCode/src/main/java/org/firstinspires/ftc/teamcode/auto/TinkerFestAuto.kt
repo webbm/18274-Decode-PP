@@ -37,6 +37,7 @@ import kotlin.math.max
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 @Autonomous(name = "Tinker Auto")
+@Disabled
 //@Disabled
 class TinkerFestAuto : LinearOpMode() {
     /* Declare OpMode members. */
