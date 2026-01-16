@@ -166,7 +166,7 @@ class TeleRobotCentric : LinearOpMode() {
 
             shooter.update()
 
-            if (manipulatorGamepad.wasJustPressed(PS5Keys.Button.CROSS.xboxButton)) {
+            /*if (manipulatorGamepad.wasJustPressed(PS5Keys.Button.CROSS.xboxButton)) {
                 shootingPosition = shootingPosition.toggle()
                 shooterSpeed = shootingPosition.middle
             }
@@ -187,7 +187,8 @@ class TeleRobotCentric : LinearOpMode() {
             }else if (manipulatorGamepad.wasJustPressed(PS5Keys.Button.DPAD_RIGHT.xboxButton)) {
                 shooter.setTargetRpm(shooterSpeed)
             }
-            shooter.update()
+            shooter.update()*/
+
             if (manipulatorGamepad.isDown((PS5Keys.Button.RIGHT_BUMPER.xboxButton))){
                 ffl.power = .6
                 ffr.power = .6

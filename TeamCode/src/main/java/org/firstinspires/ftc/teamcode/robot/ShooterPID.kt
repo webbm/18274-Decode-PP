@@ -36,10 +36,10 @@ class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
 
     fun init(hardwareMap: HardwareMap) {
         leftFlywheel = hardwareMap.get(DcMotorEx::class.java, "leftFlywheel").apply {
-            mode = DcMotor.RunMode.RUN_USING_ENCODER
+            mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         }
         rightFlywheel = hardwareMap.get(DcMotorEx::class.java, "rightFlywheel").apply {
-            mode = DcMotor.RunMode.RUN_USING_ENCODER
+            mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
             direction = DcMotorSimple.Direction.REVERSE
         }
 
@@ -87,6 +87,12 @@ class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
         rightFlywheel.targetPosition
         leftFlywheel.targetPosition
 
+    }
+
+    fun getFlywheelRpm(): Double {
+        val leftRpm = (leftFlywheel.velocity / TICKS_PER_REV) * 60.0
+        val rightRpm = (rightFlywheel.velocity / TICKS_PER_REV) * 60.0
+        return (leftRpm + rightRpm) / 2.0
     }
 
     fun stop() {
