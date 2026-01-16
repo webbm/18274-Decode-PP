@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.tuners
 
 import com.bylazar.configurables.annotations.Configurable
+import com.bylazar.telemetry.PanelsTelemetry
+import com.bylazar.telemetry.TelemetryManager
 import com.pedropathing.follower.Follower
 import com.pedropathing.geometry.Pose
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
@@ -8,9 +10,14 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.hardware.Servo
+import com.qualcomm.robotcore.util.RobotLog
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import org.firstinspires.ftc.teamcode.robot.ShooterConfig
 import org.firstinspires.ftc.teamcode.robot.ShooterPID
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil
+import java.io.BufferedWriter
+import java.io.FileWriter
 import kotlin.math.hypot
 import kotlin.math.max
 
@@ -36,6 +43,9 @@ class ShooterEquationFinder : OpMode() {
     private lateinit var intake: DcMotorEx
     private lateinit var ffl: CRServo
     private lateinit var ffr: CRServo
+    private lateinit var leftRamp: Servo
+    private lateinit var rightRamp: Servo
+    private lateinit var panelsTelemetry: TelemetryManager
 
     private var targetRpm = 2200.0
 
@@ -44,6 +54,7 @@ class ShooterEquationFinder : OpMode() {
     private var lastX = false
 
     private val savedShots = mutableListOf<String>()
+    private val logFile by lazy { AppUtil.getInstance().getSettingsFile("ShooterEquationFinder.csv") }
 
     override fun init() {
         follower = Constants.createFollower(hardwareMap)
@@ -58,6 +69,13 @@ class ShooterEquationFinder : OpMode() {
         ffl = hardwareMap.get(CRServo::class.java, "feed_left")
         ffr = hardwareMap.get(CRServo::class.java, "feed_right")
         ffl.direction = DcMotorSimple.Direction.REVERSE
+        leftRamp = hardwareMap.get(Servo::class.java, "left_ramp")
+        rightRamp = hardwareMap.get(Servo::class.java, "right_ramp")
+        panelsTelemetry = PanelsTelemetry.telemetry
+
+        if (!logFile.exists()) {
+            appendShotLog("x,y,heading_deg,distance_to_goal_in,flywheel_rpm,left_ramp_pos,right_ramp_pos")
+        }
 
         telemetry.addData("Status", "Initialized")
         telemetry.update()
@@ -102,6 +120,19 @@ class ShooterEquationFinder : OpMode() {
         }
 
         if (xPressed) {
+            val flywheelRpm = shooterPID.getFlywheelRpm()
+            appendShotLog(
+                String.format(
+                    "%.2f,%.2f,%.1f,%.2f,%.0f,%.4f,%.4f",
+                    pose.x,
+                    pose.y,
+                    Math.toDegrees(pose.heading),
+                    distanceToGoal,
+                    flywheelRpm,
+                    leftRamp.position,
+                    rightRamp.position
+                )
+            )
             val record = String.format(
                 "X %.2f Y %.2f H %.1f D %.2f RPM %.0f",
                 pose.x,
@@ -127,5 +158,26 @@ class ShooterEquationFinder : OpMode() {
             telemetry.addLine(shot)
         }
         telemetry.update()
+
+        panelsTelemetry.debug("pose_x", pose.x)
+        panelsTelemetry.debug("pose_y", pose.y)
+        panelsTelemetry.debug("heading_deg", Math.toDegrees(pose.heading))
+        panelsTelemetry.debug("distance_to_goal_in", distanceToGoal)
+        panelsTelemetry.debug("target_rpm", targetRpm)
+        panelsTelemetry.debug("flywheel_rpm", shooterPID.getFlywheelRpm())
+        panelsTelemetry.debug("left_ramp_pos", leftRamp.position)
+        panelsTelemetry.debug("right_ramp_pos", rightRamp.position)
+        panelsTelemetry.update(telemetry)
+    }
+
+    private fun appendShotLog(line: String) {
+        try {
+            BufferedWriter(FileWriter(logFile, true)).use { writer ->
+                writer.append(line)
+                writer.newLine()
+            }
+        } catch (e: Exception) {
+            RobotLog.ee("ShooterEquationFinder", e, "Failed to write %s", logFile.absolutePath)
+        }
     }
 }

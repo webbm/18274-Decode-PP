@@ -9,8 +9,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 @TeleOp(name = "Intake Test", group = "Test")
 class IntakeTestOpMode : LinearOpMode() {
     override fun runOpMode() {
-        val leftMotor = hardwareMap.get(DcMotorEx::class.java, "intakeL")
-        val rightMotor = hardwareMap.get(DcMotorEx::class.java, "intakeR")
+        val leftMotor = hardwareMap.get(DcMotorEx::class.java, "intake_Left")
+        val rightMotor = hardwareMap.get(DcMotorEx::class.java, "intake_Right")
 
         leftMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         rightMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
