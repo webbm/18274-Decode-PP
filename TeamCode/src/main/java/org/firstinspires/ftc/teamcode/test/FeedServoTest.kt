@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.test
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.Range
 
+@Disabled
 @TeleOp(name = "Feed Servo Test", group = "Test")
 class FeedServoTest : LinearOpMode() {
     private enum class Mode {

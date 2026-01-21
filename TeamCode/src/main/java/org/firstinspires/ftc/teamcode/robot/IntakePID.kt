@@ -14,7 +14,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 @Configurable
-object ShooterConfig{
+object IntakeConfig{
 
     @JvmField var kP: Double = 0.0025
     @JvmField var kI: Double = 0.0
@@ -23,10 +23,10 @@ object ShooterConfig{
 
     @JvmField var targetRpm: Double = 0.0
 }
-class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
+class IntakePID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
 
-    private lateinit var leftFlywheel: DcMotorEx
-    private lateinit var rightFlywheel: DcMotorEx
+    private lateinit var leftIntake: DcMotorEx
+    private lateinit var rightIntake: DcMotorEx
 
     private var leftLastError = 0.0
     private var rightLastError = 0.0
@@ -35,11 +35,11 @@ class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
 
 
     fun init(hardwareMap: HardwareMap) {
-        leftFlywheel = hardwareMap.get(DcMotorEx::class.java, "left_flywheel").apply {
+        leftIntake = hardwareMap.get(DcMotorEx::class.java, "left_intake").apply {
             mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-            direction = DcMotorSimple.Direction.REVERSE
+            direction = DcMotorSimple.Direction.FORWARD
         }
-        rightFlywheel = hardwareMap.get(DcMotorEx::class.java, "right_flywheel").apply {
+        rightIntake = hardwareMap.get(DcMotorEx::class.java, "right_intake").apply {
             mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
             direction = DcMotorSimple.Direction.FORWARD
         }
@@ -54,7 +54,7 @@ class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
         val targetTicksPerSecond = (targetRpm / 60.0) * TICKS_PER_REV
 
         // --- Left motor ---
-        val leftVelocity = leftFlywheel.velocity
+        val leftVelocity = leftIntake.velocity
         val leftError = targetTicksPerSecond - leftVelocity
         leftIntegral += leftError
         val leftDerivative = leftError - leftLastError
@@ -67,7 +67,7 @@ class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
         val leftClipped = min(max(leftOutput, -.75), .75)
 
         // --- Right motor ---
-        val rightVelocity = rightFlywheel.velocity
+        val rightVelocity = rightIntake.velocity
         val rightError = targetTicksPerSecond - rightVelocity
         rightIntegral += rightError
         val rightDerivative = rightError - rightLastError
@@ -80,25 +80,25 @@ class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
         val rightClipped = min(max(rightOutput, -.75), .75)
 
         // Apply power
-        leftFlywheel.power = leftClipped
-        rightFlywheel.power = rightClipped
+        leftIntake.power = leftClipped
+        rightIntake.power = rightClipped
     }
 
     fun flywheel() {
-        rightFlywheel.targetPosition
-        leftFlywheel.targetPosition
+        rightIntake.targetPosition
+        leftIntake.targetPosition
 
     }
 
     fun getFlywheelRpm(): Double {
-        val leftRpm = (leftFlywheel.velocity / TICKS_PER_REV) * 60.0
-        val rightRpm = (rightFlywheel.velocity / TICKS_PER_REV) * 60.0
+        val leftRpm = (leftIntake.velocity / TICKS_PER_REV) * 60.0
+        val rightRpm = (rightIntake.velocity / TICKS_PER_REV) * 60.0
         return (leftRpm + rightRpm) / 2.0
     }
 
     fun stop() {
-        leftFlywheel.power = 0.0
-        rightFlywheel.power = 0.0
+        leftIntake.power = 0.0
+        rightIntake.power = 0.0
         leftIntegral = 0.0
         rightIntegral = 0.0
         leftLastError = 0.0
@@ -107,6 +107,6 @@ class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
     }
 
 
-    // goBILDA 6000rpm motor encoder resolution
-    val TICKS_PER_REV = 28.0
+    // goBILDA 1150rpm motor encoder resolution
+    val TICKS_PER_REV = 145.1
 }

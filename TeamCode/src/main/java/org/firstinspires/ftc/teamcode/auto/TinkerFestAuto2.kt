@@ -37,8 +37,8 @@ import kotlin.math.max
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
-@Autonomous(name = "Shoot then Drive straight")
-class TinkerFestAuto : LinearOpMode() {
+@Autonomous(name = "Drive straight")
+class TinkerFestAuto2 : LinearOpMode() {
     /* Declare OpMode members. */
     lateinit var leftDrive: DcMotor
     lateinit var leftBackDrive: DcMotor
@@ -74,10 +74,10 @@ class TinkerFestAuto : LinearOpMode() {
             direction = DcMotorSimple.Direction.REVERSE
         }
 
-        left_flywheel = hardwareMap.get(DcMotor::class.java, "left_flywheel").apply {
+        left_flywheel = hardwareMap.get(DcMotor::class.java, "left_front").apply {
             zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         }
-        right_flywheel = hardwareMap.get(DcMotor::class.java, "right_flywheel").apply {
+        right_flywheel = hardwareMap.get(DcMotor::class.java, "right_back").apply {
             zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
             direction = DcMotorSimple.Direction.REVERSE
         }
@@ -97,29 +97,14 @@ class TinkerFestAuto : LinearOpMode() {
         waitForStart()
         runtime.reset()
 
-            right_flywheel.power = .65
-            left_flywheel.power = .65
 
-            runtime.reset()
-            ffr.power = -1.0
-            ffl.power = -1.0
-
-            while (opModeIsActive() && runtime.seconds() < 6.0) {
-                telemetry.update()
-            }
-
-            right_flywheel.power = 0.0
-            left_flywheel.power = 0.0
-            ffr.power = 0.0
-            ffl.power = 0.0
-
-            leftDrive.power = FORWARD_SPEED + 0.5
+            leftDrive.power = FORWARD_SPEED
             rightDrive.power = FORWARD_SPEED
-            leftBackDrive.power = FORWARD_SPEED + 0.05
+            leftBackDrive.power = FORWARD_SPEED
             rightBackDrive.power = FORWARD_SPEED
 
             runtime.reset()
-            while (opModeIsActive() && (runtime.seconds() < .5)) {
+            while (opModeIsActive() && (runtime.seconds() < 1.5)) {
                 telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds())
                 telemetry.update()
             }

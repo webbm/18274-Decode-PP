@@ -9,6 +9,7 @@ import com.arcrobotics.ftclib.hardware.motors.MotorEx
 import com.bylazar.telemetry.PanelsTelemetry
 import com.pedropathing.follower.Follower
 import com.pedropathing.geometry.Pose
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.CRServo
@@ -25,6 +26,7 @@ import org.firstinspires.ftc.teamcode.util.PS5Keys
 /**
  * Test OpMode for complex movements including Travel Position
  */
+@Disabled
 @TeleOp(name = "Decode TeleOp")
 class TeleRobotCentric : LinearOpMode() {
 

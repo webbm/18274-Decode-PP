@@ -10,6 +10,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -20,6 +21,7 @@ import org.firstinspires.ftc.teamcode.robot.ShooterPID;
 
 @Autonomous(name = "Close Blue Auto", group = "Blue")
 @Configurable // Panels
+@Disabled
 public class BlueAchillesAutoClose extends OpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance

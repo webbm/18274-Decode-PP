@@ -12,10 +12,10 @@ class MotorTest : LinearOpMode() {
         val rightBack = hardwareMap.get(DcMotorEx::class.java, "right_back")
         val leftFront = hardwareMap.get(DcMotorEx::class.java, "left_front")
         val leftBack = hardwareMap.get(DcMotorEx::class.java, "left_back")
-        val leftFlywheel = hardwareMap.get(DcMotorEx::class.java, "leftFlywheel")
-        val rightFlywheel = hardwareMap.get(DcMotorEx::class.java, "rightFlywheel")
-        val intakeRight = hardwareMap.get(DcMotorEx::class.java, "intake_Right")
-        val intakeLeft = hardwareMap.get(DcMotorEx::class.java, "intake_Left")
+        val leftFlywheel = hardwareMap.get(DcMotorEx::class.java, "left_flywheel")
+        val rightFlywheel = hardwareMap.get(DcMotorEx::class.java, "right_flywheel")
+        val intakeRight = hardwareMap.get(DcMotorEx::class.java, "intake_right")
+        val intakeLeft = hardwareMap.get(DcMotorEx::class.java, "intake_left")
 
         val motors = listOf(
             rightFront,
