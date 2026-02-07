@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.tuners
 
 import com.bylazar.configurables.annotations.Configurable
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import org.firstinspires.ftc.teamcode.robot.ShooterConfig
 import org.firstinspires.ftc.teamcode.robot.ShooterPID
 
+@Disabled
 @TeleOp(name = "Shooter PIDF Tuner", group = "Tuning")
 @Configurable
 class ShooterPIDFTuner: OpMode() {

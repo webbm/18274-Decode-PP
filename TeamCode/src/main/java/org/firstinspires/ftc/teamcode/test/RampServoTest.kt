@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.Range
 
-@Disabled
+
 @TeleOp(name = "Ramp Servo Test", group = "Test")
 class RampServoTest : LinearOpMode() {
     override fun runOpMode() {

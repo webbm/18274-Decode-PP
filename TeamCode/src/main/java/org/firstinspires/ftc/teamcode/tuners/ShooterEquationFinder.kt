@@ -5,6 +5,7 @@ import com.bylazar.telemetry.PanelsTelemetry
 import com.bylazar.telemetry.TelemetryManager
 import com.pedropathing.follower.Follower
 import com.pedropathing.geometry.Pose
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.CRServo
@@ -16,6 +17,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import org.firstinspires.ftc.teamcode.robot.ShooterConfig
 import org.firstinspires.ftc.teamcode.robot.ShooterPID
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil
+import org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower
 import java.io.BufferedWriter
 import java.io.FileWriter
 import kotlin.math.hypot
@@ -23,6 +25,7 @@ import kotlin.math.max
 
 @TeleOp(name = "Shooter Equation Finder", group = "Tuning")
 @Configurable
+@Disabled
 class ShooterEquationFinder : OpMode() {
 
     companion object {

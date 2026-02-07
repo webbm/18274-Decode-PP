@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor
 @TeleOp(name = "Flywheel Tuning", group = "Tuning")
 class FlywheelTuning : LinearOpMode() {
     private val panelsTelemetry = PanelsTelemetry.telemetry
-    private var batteryVoltageSensor: VoltageSensor? = null
+    private lateinit var batteryVoltageSensor: VoltageSensor
 
     @Throws(InterruptedException::class)
     override fun runOpMode() {
@@ -75,7 +75,7 @@ class FlywheelTuning : LinearOpMode() {
     }
 
     private fun setPIDFCoefficients(motor: DcMotorEx, coefficients: PIDFCoefficients) {
-        val batteryVoltage = batteryVoltageSensor?.voltage ?: 12.0
+        val batteryVoltage = batteryVoltageSensor.voltage ?: 12.0
         motor.setPIDFCoefficients(
             DcMotor.RunMode.RUN_USING_ENCODER,
             PIDFCoefficients(

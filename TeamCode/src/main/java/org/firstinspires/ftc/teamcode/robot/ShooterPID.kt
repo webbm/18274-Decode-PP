@@ -37,7 +37,7 @@ class ShooterPID(kP1: Double, kI1: Double, kD1: Double, kF1: Double) {
     fun init(hardwareMap: HardwareMap) {
         leftFlywheel = hardwareMap.get(DcMotorEx::class.java, "left_flywheel").apply {
             mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-            direction = DcMotorSimple.Direction.REVERSE
+            direction = DcMotorSimple.Direction.FORWARD
         }
         rightFlywheel = hardwareMap.get(DcMotorEx::class.java, "right_flywheel").apply {
             mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
